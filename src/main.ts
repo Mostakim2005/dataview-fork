@@ -384,21 +384,21 @@ class GeneralSettingsTab extends PluginSettingTab {
             );
 
         new Setting(this.containerEl)
-            .setName("Enable visual query builder")
-            .setDesc("Show and enable the optional visual editor for standard Dataview queries.")
-            .addToggle(toggle =>
-                toggle
-                    .setValue(this.plugin.settings.enableQueryBuilder)
-                    .onChange(async value => await this.plugin.updateSettings({ enableQueryBuilder: value }))
-            );
-
-        new Setting(this.containerEl)
             .setName("Enable JavaScript queries")
             .setDesc("Enable or disable executing DataviewJS queries.")
             .addToggle(toggle =>
                 toggle
                     .setValue(this.plugin.settings.enableDataviewJs)
                     .onChange(async value => await this.plugin.updateSettings({ enableDataviewJs: value }))
+            );
+
+        new Setting(this.containerEl)
+            .setName("Enable visual query builder")
+            .setDesc("Show and enable the optional visual editor for standard Dataview queries.")
+            .addToggle(toggle =>
+                toggle
+                    .setValue(this.plugin.settings.enableQueryBuilder)
+                    .onChange(async value => await this.plugin.updateSettings({ enableQueryBuilder: value }))
             );
 
         new Setting(this.containerEl)
