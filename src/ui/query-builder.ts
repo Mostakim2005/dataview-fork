@@ -176,9 +176,7 @@ function serializeSource(source: Source): string {
         case "csv":
             return `csv(${escapeString(source.path)})`;
         case "link":
-            return source.direction === "incoming"
-                ? `[[${source.file}]]`
-                : `outgoing([[${source.file}]])`;
+            return source.direction === "incoming" ? `[[${source.file}]]` : `outgoing([[${source.file}]])`;
         case "empty":
             return "";
         case "negate":
@@ -187,7 +185,6 @@ function serializeSource(source: Source): string {
             return `${serializeSource(source.left)} ${source.op} ${serializeSource(source.right)}`;
     }
 }
-
 
 function sourceDraftFromSource(source: Source, join: LogicalJoin = "AND", negate = false): SourceDraft[] {
     if (source.type === "binaryop") {
@@ -279,13 +276,11 @@ function queryToDraft(query: Query, fields: string[]): QueryDraft {
                 break;
             case "flatten":
                 draft.flatten = serializeField(operation.field.field);
-                draft.flattenAlias =
-                    operation.field.name === draft.flatten ? "" : operation.field.name;
+                draft.flattenAlias = operation.field.name === draft.flatten ? "" : operation.field.name;
                 break;
             case "group":
                 draft.group = serializeField(operation.field.field);
-                draft.groupAlias =
-                    operation.field.name === draft.group ? "" : operation.field.name;
+                draft.groupAlias = operation.field.name === draft.group ? "" : operation.field.name;
                 break;
             case "extract":
                 // Extract is an internal execution operation and is not directly user-authored.
@@ -357,10 +352,12 @@ function renderClauseByType(draft: QueryDraft, type: QueryOperation["type"]): st
         }
         case "sort":
             return draft.sorts.length
-                ? [`SORT ${draft.sorts
-                      .filter(sort => sort.field.trim())
-                      .map(sort => `${sort.field.trim()} ${sort.direction === "ascending" ? "ASC" : "DESC"}`)
-                      .join(", ")}`]
+                ? [
+                      `SORT ${draft.sorts
+                          .filter(sort => sort.field.trim())
+                          .map(sort => `${sort.field.trim()} ${sort.direction === "ascending" ? "ASC" : "DESC"}`)
+                          .join(", ")}`,
+                  ]
                 : [];
         case "limit":
             return draft.limit.trim() ? [`LIMIT ${draft.limit.trim()}`] : [];
@@ -374,11 +371,7 @@ function renderClauseByType(draft: QueryDraft, type: QueryOperation["type"]): st
                 : [];
         case "group":
             return draft.group.trim()
-                ? [
-                      `GROUP BY ${draft.group.trim()}${
-                          draft.groupAlias.trim() ? ` AS ${draft.groupAlias.trim()}` : ""
-                      }`,
-                  ]
+                ? [`GROUP BY ${draft.group.trim()}${draft.groupAlias.trim() ? ` AS ${draft.groupAlias.trim()}` : ""}`]
                 : [];
         case "extract":
             return [];
@@ -456,9 +449,8 @@ function findDataviewBlock(editor: Editor): { start: number; end: number; source
 
     for (let line = start + 1; line < editor.lineCount(); line++) {
         if (/^\s*```\s*$/.test(editor.getLine(line))) {
-            const source = Array.from(
-                { length: line - start - 1 },
-                (_, index) => editor.getLine(start + 1 + index)
+            const source = Array.from({ length: line - start - 1 }, (_, index) =>
+                editor.getLine(start + 1 + index)
             ).join("\n");
             return { start, end: line, source };
         }
@@ -489,12 +481,7 @@ export class QueryBuilderModal extends Modal {
     private previewEl: HTMLElement;
     private bodyEl: HTMLElement;
 
-    public constructor(
-        appRef: App,
-        private index: FullIndex,
-        initialQuery?: string,
-        editor?: Editor
-    ) {
+    public constructor(appRef: App, private index: FullIndex, initialQuery?: string, editor?: Editor) {
         super(appRef);
         this.editor = editor ?? null;
         this.block = editor ? findDataviewBlock(editor) : null;
@@ -643,19 +630,29 @@ export class QueryBuilderModal extends Modal {
     private renderList(): void {
         const section = this.createSection("List", "Optionally choose what each list item displays.");
 
-        this.addFieldSelect(section, this.draft.listFormat, value => {
-            this.draft.listFormat = value;
-            this.updatePreview();
-        }, "List expression");
+        this.addFieldSelect(
+            section,
+            this.draft.listFormat,
+            value => {
+                this.draft.listFormat = value;
+                this.updatePreview();
+            },
+            "List expression"
+        );
     }
 
     private renderCalendar(): void {
         const section = this.createSection("Calendar", "Choose the date field used by the calendar.");
 
-        this.addFieldSelect(section, this.draft.calendarField, value => {
-            this.draft.calendarField = value;
-            this.updatePreview();
-        }, "Date field");
+        this.addFieldSelect(
+            section,
+            this.draft.calendarField,
+            value => {
+                this.draft.calendarField = value;
+                this.updatePreview();
+            },
+            "Date field"
+        );
     }
 
     private renderSources(): void {
@@ -686,16 +683,10 @@ export class QueryBuilderModal extends Modal {
                 this.updatePreview();
             };
 
-            this.addDropdown(
-                row,
-                "Negation",
-                { false: "Normal", true: "NOT" },
-                String(source.negate),
-                value => {
-                    source.negate = value === "true";
-                    this.updatePreview();
-                }
-            );
+            this.addDropdown(row, "Negation", { false: "Normal", true: "NOT" }, String(source.negate), value => {
+                source.negate = value === "true";
+                this.updatePreview();
+            });
 
             this.addRemoveButton(row, () => {
                 this.draft.sources.splice(index, 1);
@@ -729,16 +720,10 @@ export class QueryBuilderModal extends Modal {
                 });
             }
 
-            this.addDropdown(
-                row,
-                "NOT",
-                { false: "Normal", true: "NOT" },
-                String(condition.negate),
-                value => {
-                    condition.negate = value === "true";
-                    this.updatePreview();
-                }
-            );
+            this.addDropdown(row, "NOT", { false: "Normal", true: "NOT" }, String(condition.negate), value => {
+                condition.negate = value === "true";
+                this.updatePreview();
+            });
 
             this.addFieldSelect(row, condition.field, value => {
                 condition.field = value;
@@ -826,30 +811,46 @@ export class QueryBuilderModal extends Modal {
             "Advanced Dataview clauses remain available when you need more control."
         );
 
-        this.addFieldSelect(section, this.draft.flatten, value => {
-            this.draft.flatten = value;
-            this.updatePreview();
-        }, "FLATTEN expression");
+        this.addFieldSelect(
+            section,
+            this.draft.flatten,
+            value => {
+                this.draft.flatten = value;
+                this.updatePreview();
+            },
+            "FLATTEN expression"
+        );
 
         this.addTextInput(section, "FLATTEN alias", this.draft.flattenAlias, value => {
             this.draft.flattenAlias = value;
             this.updatePreview();
         });
 
-        this.addFieldSelect(section, this.draft.group, value => {
-            this.draft.group = value;
-            this.updatePreview();
-        }, "GROUP BY expression");
+        this.addFieldSelect(
+            section,
+            this.draft.group,
+            value => {
+                this.draft.group = value;
+                this.updatePreview();
+            },
+            "GROUP BY expression"
+        );
 
         this.addTextInput(section, "GROUP BY alias", this.draft.groupAlias, value => {
             this.draft.groupAlias = value;
             this.updatePreview();
         });
 
-        this.addTextInput(section, "LIMIT", this.draft.limit, value => {
-            this.draft.limit = value;
-            this.updatePreview();
-        }, "Number or expression");
+        this.addTextInput(
+            section,
+            "LIMIT",
+            this.draft.limit,
+            value => {
+                this.draft.limit = value;
+                this.updatePreview();
+            },
+            "Number or expression"
+        );
 
         const advanced = new Setting(section)
             .setName("Advanced clauses")

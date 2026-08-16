@@ -120,11 +120,7 @@ function applyEdits(editor: Editor, edits: FieldEdit[]): void {
 }
 
 class ConfirmFieldChangesModal extends Modal {
-    constructor(
-        app: App,
-        private readonly edits: FieldEdit[],
-        private readonly onConfirm: () => void
-    ) {
+    constructor(app: App, private readonly edits: FieldEdit[], private readonly onConfirm: () => void) {
         super(app);
     }
 
