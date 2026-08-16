@@ -143,17 +143,13 @@ export default class DataviewPlugin extends Plugin {
             },
         });
 
-        this.queryBuilderRibbon = this.addRibbonIcon(
-            "list-filter",
-            "Open visual Dataview query builder",
-            () => {
-                if (!this.settings.enableQueryBuilder) {
-                    new Notice("The visual query builder is disabled in Dataview settings.");
-                    return;
-                }
-                openQueryBuilder(this.app, this.index);
+        this.queryBuilderRibbon = this.addRibbonIcon("list-filter", "Open visual Dataview query builder", () => {
+            if (!this.settings.enableQueryBuilder) {
+                new Notice("The visual query builder is disabled in Dataview settings.");
+                return;
             }
-        );
+            openQueryBuilder(this.app, this.index);
+        });
         this.updateQueryBuilderVisibility();
 
         this.addCommand({
