@@ -84,6 +84,7 @@ function collectFields(source: string): FieldOccurrence[] {
 
 function applyEdits(editor: Editor, edits: FieldEdit[]): void {
     const byLine = new Map<number, FieldEdit[]>();
+
     for (const edit of edits) {
         const list = byLine.get(edit.line) ?? [];
         list.push(edit);
@@ -114,6 +115,8 @@ function applyEdits(editor: Editor, edits: FieldEdit[]): void {
         const to = { line: lineNumber, ch: line.length };
         editor.replaceRange(replacement, from, to);
     }
+
+    new Notice("Dataview inline fields updated.");
 }
 
 class ConfirmFieldChangesModal extends Modal {

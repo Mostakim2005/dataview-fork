@@ -1,10 +1,9 @@
 import { App, Editor, MarkdownView, Modal, Notice, Setting } from "obsidian";
 import { openFieldManager } from "ui/field-manager";
 import { parseQuery } from "query/parse";
-import { parseField } from "expression/parse";
 import { Field } from "expression/field";
 import { Query, QueryOperation, QuerySortBy, NamedField } from "query/query";
-import { Source, Sources } from "data-index/source";
+import { Source } from "data-index/source";
 import { FullIndex } from "data-index/index";
 import { DateTime, Duration } from "luxon";
 import { Link, Literal } from "data-model/value";
@@ -189,10 +188,6 @@ function serializeSource(source: Source): string {
     }
 }
 
-function parseExpression(text: string): Field | null {
-    const result = parseField(text.trim());
-    return result.successful ? result.value : null;
-}
 
 function sourceDraftFromSource(source: Source, join: LogicalJoin = "AND", negate = false): SourceDraft[] {
     if (source.type === "binaryop") {
@@ -422,8 +417,8 @@ function draftToText(draft: QueryDraft): string {
         if (expression.trim()) lines.push(`FROM ${expression}`);
     }
 
-    const operationTypes = draft.originalOperationTypes.length
-        ? Array.from(new Set(draft.originalOperationTypes))
+    const operationTypes: QueryOperation["type"][] = draft.originalOperationTypes.length
+        ? (Array.from(new Set(draft.originalOperationTypes)) as QueryOperation["type"][])
         : ["where", "flatten", "group", "sort", "limit"];
 
     const emitted = new Set<QueryOperation["type"]>();
@@ -495,7 +490,7 @@ export class QueryBuilderModal extends Modal {
     private bodyEl: HTMLElement;
 
     public constructor(
-        private appRef: App,
+        appRef: App,
         private index: FullIndex,
         initialQuery?: string,
         editor?: Editor
