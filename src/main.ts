@@ -4,6 +4,7 @@ import {
     debounce,
     MarkdownPostProcessorContext,
     MarkdownView,
+    Notice,
     Plugin,
     PluginSettingTab,
     Setting,
@@ -29,6 +30,8 @@ import {
 import { DataviewInit } from "ui/markdown";
 import { inlinePlugin } from "./ui/lp-render";
 import { Extension } from "@codemirror/state";
+import { openQueryBuilder } from "ui/query-builder";
+import { openFieldManager } from "ui/field-manager";
 
 export default class DataviewPlugin extends Plugin {
     /** Plugin-wide default settings. */
@@ -41,6 +44,7 @@ export default class DataviewPlugin extends Plugin {
 
     /** CodeMirror 6 extensions that dataview installs. Tracked via array to allow for dynamic updates. */
     private cmExtension: Extension[];
+    private queryBuilderRibbon: HTMLElement | null = null;
 
     async onload() {
         // Settings initialization; write defaults first time around.
@@ -126,6 +130,37 @@ export default class DataviewPlugin extends Plugin {
         interface WorkspaceLeafRebuild extends WorkspaceLeaf {
             rebuildView(): void;
         }
+
+        this.addCommand({
+            id: "dataview-open-query-builder",
+            name: "Open visual query builder",
+            callback: () => {
+                if (!this.settings.enableQueryBuilder) {
+                    new Notice("The visual query builder is disabled in Dataview settings.");
+                    return;
+                }
+                openQueryBuilder(this.app, this.index);
+            },
+        });
+
+        this.queryBuilderRibbon = this.addRibbonIcon(
+            "list-filter",
+            "Open visual Dataview query builder",
+            () => {
+                if (!this.settings.enableQueryBuilder) {
+                    new Notice("The visual query builder is disabled in Dataview settings.");
+                    return;
+                }
+                openQueryBuilder(this.app, this.index);
+            }
+        );
+        this.updateQueryBuilderVisibility();
+
+        this.addCommand({
+            id: "dataview-manage-inline-fields",
+            name: "Manage inline Dataview fields in current note",
+            callback: () => openFieldManager(this.app),
+        });
 
         this.addCommand({
             id: "dataview-rebuild-current-view",
@@ -306,7 +341,14 @@ export default class DataviewPlugin extends Plugin {
     async updateSettings(settings: Partial<DataviewSettings>) {
         Object.assign(this.settings, settings);
         this.updateRefreshSettings();
+        this.updateQueryBuilderVisibility();
         await this.saveData(this.settings);
+    }
+
+    private updateQueryBuilderVisibility(): void {
+        if (this.queryBuilderRibbon) {
+            this.queryBuilderRibbon.style.display = this.settings.enableQueryBuilder ? "" : "none";
+        }
     }
 
     /** @deprecated Call the given callback when the dataview API has initialized. */
@@ -348,6 +390,15 @@ class GeneralSettingsTab extends PluginSettingTab {
                 toggle
                     .setValue(this.plugin.settings.enableDataviewJs)
                     .onChange(async value => await this.plugin.updateSettings({ enableDataviewJs: value }))
+            );
+
+        new Setting(this.containerEl)
+            .setName("Enable visual query builder")
+            .setDesc("Show and enable the optional visual editor for standard Dataview queries.")
+            .addToggle(toggle =>
+                toggle
+                    .setValue(this.plugin.settings.enableQueryBuilder)
+                    .onChange(async value => await this.plugin.updateSettings({ enableQueryBuilder: value }))
             );
 
         new Setting(this.containerEl)
