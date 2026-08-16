@@ -1,0 +1,32 @@
+name: Format Query Builder Files
+
+on:
+  workflow_dispatch:
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Format modified files
+        run: npx prettier --write src/main.ts src/ui/field-manager.ts src/ui/query-builder.ts
+
+      - name: Upload formatted files
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-query-builder-files
+          path: |
+            src/main.ts
+            src/ui/field-manager.ts
+            src/ui/query-builder.ts
