@@ -47,7 +47,6 @@ function collectFields(source: string): FieldOccurrence[] {
     for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
         const line = lines[lineNumber];
         const inlineFields = extractInlineFields(line, false);
-        const covered = inlineFields.map(field => ({ start: field.start, end: field.end }));
 
         for (const field of inlineFields) {
             fields.push({
@@ -91,37 +90,30 @@ function applyEdits(editor: Editor, edits: FieldEdit[]): void {
         byLine.set(edit.line, list);
     }
 
-    editor.operation(() => {
-        for (const [lineNumber, lineEdits] of Array.from(byLine.entries()).sort((a, b) => b[0] - a[0])) {
-            const line = editor.getLine(lineNumber);
-            let replacement = line;
+    for (const [lineNumber, lineEdits] of Array.from(byLine.entries()).sort((a, b) => b[0] - a[0])) {
+        const line = editor.getLine(lineNumber);
+        let replacement = line;
 
-            const sorted = [...lineEdits].sort((a, b) => b.start - a.start || b.end - a.end);
-            for (const edit of sorted) {
-                const currentStart = edit.start;
-                const currentEnd = edit.end;
+        const sorted = [...lineEdits].sort((a, b) => b.start - a.start || b.end - a.end);
+        for (const edit of sorted) {
+            const currentStart = edit.start;
+            const currentEnd = edit.end;
 
-                if (edit.kind === "full-line" && edit.deleted) {
-                    const listPrefix = /^\s*(?:[-+*]|\d+[.)])\s+/.test(line);
-                    if (listPrefix) {
-                        replacement = "";
-                    } else {
-                        replacement = "";
-                    }
-                    continue;
-                }
-
-                const before = replacement.substring(0, currentStart);
-                const after = replacement.substring(currentEnd);
-                const replacementText = getInlineReplacement(edit);
-                replacement = `${before}${replacementText}${after}`;
+            if (edit.kind === "full-line" && edit.deleted) {
+                replacement = "";
+                continue;
             }
 
-            const from = { line: lineNumber, ch: 0 };
-            const to = { line: lineNumber, ch: line.length };
-            editor.replaceRange(replacement, from, to);
+            const before = replacement.substring(0, currentStart);
+            const after = replacement.substring(currentEnd);
+            const replacementText = getInlineReplacement(edit);
+            replacement = `${before}${replacementText}${after}`;
         }
-    });
+
+        const from = { line: lineNumber, ch: 0 };
+        const to = { line: lineNumber, ch: line.length };
+        editor.replaceRange(replacement, from, to);
+    }
 }
 
 class ConfirmFieldChangesModal extends Modal {
@@ -155,7 +147,9 @@ class ConfirmFieldChangesModal extends Modal {
         }
 
         const warning = this.contentEl.createDiv({ cls: "dataview-field-manager-confirm-warning" });
-        warning.setText("These changes will modify the current Markdown note. This cannot be undone by Dataview automatically.");
+        warning.setText(
+            "These changes will modify the current Markdown note. This cannot be undone by Dataview automatically."
+        );
 
         const footer = this.contentEl.createDiv({ cls: "dataview-field-manager-footer" });
         const cancel = footer.createEl("button", { text: "Cancel" });
@@ -199,7 +193,8 @@ export class FieldManagerModal extends Modal {
 
         const intro = this.contentEl.createDiv({ cls: "dataview-field-manager-intro" });
         intro.setText(
-            "Edit fields written with :: in the current note. Rename, change values, or mark fields for deletion. Nothing is written until you confirm."
+            "Edit fields written with :: in the current note. Rename, change values, or mark fields for deletion. " +
+                "Nothing is written until you confirm."
         );
 
         const path = this.app.workspace.getActiveFile()?.path;
@@ -280,7 +275,9 @@ export class FieldManagerModal extends Modal {
     }
 
     private updateConfirmButton(): void {
-        const buttons = this.contentEl.querySelectorAll<HTMLButtonElement>(".dataview-field-manager-footer button.mod-cta");
+        const buttons = this.contentEl.querySelectorAll<HTMLButtonElement>(
+            ".dataview-field-manager-footer button.mod-cta"
+        );
         if (buttons.length > 0) buttons[buttons.length - 1].disabled = !this.hasChanges();
     }
 

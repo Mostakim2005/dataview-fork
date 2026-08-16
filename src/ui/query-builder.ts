@@ -147,7 +147,9 @@ function serializeField(field: Field, parentPrecedence = 0): string {
         case "index":
             return `${serializeField(field.object, 8)}[${serializeField(field.index)}]`;
         case "function":
-            return `${serializeField(field.func, 8)}(${field.arguments.map(argument => serializeField(argument)).join(", ")})`;
+            return `${serializeField(field.func, 8)}(${field.arguments
+                .map(argument => serializeField(argument))
+                .join(", ")})`;
         case "lambda":
             return `(${field.arguments.join(", ")}) => ${serializeField(field.value)}`;
         case "list":
@@ -608,7 +610,10 @@ export class QueryBuilderModal extends Modal {
     }
 
     private renderTableFields(): void {
-        const section = this.createSection("Columns", "Select fields from the vault index or enter a custom expression.");
+        const section = this.createSection(
+            "Columns",
+            "Select fields from the vault index or enter a custom expression."
+        );
 
         this.draft.tableFields.forEach((field, index) => {
             const row = section.createDiv({ cls: "dataview-query-builder-row dataview-query-builder-row-wrap" });
@@ -714,7 +719,10 @@ export class QueryBuilderModal extends Modal {
     }
 
     private renderConditions(): void {
-        const section = this.createSection("Conditions", "Build WHERE expressions with dropdown operators and AND / OR / NOT.");
+        const section = this.createSection(
+            "Conditions",
+            "Build WHERE expressions with dropdown operators and AND / OR / NOT."
+        );
 
         this.draft.conditions.forEach((condition, index) => {
             const row = section.createDiv({ cls: "dataview-query-builder-row dataview-query-builder-row-wrap" });
@@ -818,7 +826,10 @@ export class QueryBuilderModal extends Modal {
     }
 
     private renderOtherOptions(): void {
-        const section = this.createSection("Other query options", "Advanced Dataview clauses remain available when you need more control.");
+        const section = this.createSection(
+            "Other query options",
+            "Advanced Dataview clauses remain available when you need more control."
+        );
 
         this.addFieldSelect(section, this.draft.flatten, value => {
             this.draft.flatten = value;
@@ -847,7 +858,9 @@ export class QueryBuilderModal extends Modal {
 
         const advanced = new Setting(section)
             .setName("Advanced clauses")
-            .setDesc("One existing Dataview clause per line. Use this for complex expressions you do not want to decompose.")
+            .setDesc(
+                "One existing Dataview clause per line. Use this for complex expressions you do not want to decompose."
+            )
             .addTextArea(area => {
                 area.inputEl.rows = 3;
                 area.setValue(this.draft.advancedClauses.join("\n"));
@@ -864,7 +877,10 @@ export class QueryBuilderModal extends Modal {
     }
 
     private renderPreview(): void {
-        const section = this.createSection("Generated query", "This is standard Dataview syntax; the normal Dataview parser remains responsible for execution.");
+        const section = this.createSection(
+            "Generated query",
+            "This is standard Dataview syntax; the normal Dataview parser remains responsible for execution."
+        );
         this.previewEl = section.createEl("pre", { cls: "dataview-query-builder-preview" });
         this.previewEl.setText(draftToText(this.draft));
     }
