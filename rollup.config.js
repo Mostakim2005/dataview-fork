@@ -8,7 +8,6 @@ const BASE_CONFIG = {
     input: "src/main.ts",
     external: ["obsidian", "@codemirror/view", "@codemirror/state", "@codemirror/language"],
     onwarn: (warning, warn) => {
-        // Sorry rollup, but we're using eval...
         if (/Use of eval is strongly discouraged/.test(warning.message)) return;
         warn(warning);
     },
@@ -45,7 +44,7 @@ const DEV_PLUGIN_CONFIG = {
 const PROD_PLUGIN_CONFIG = {
     ...BASE_CONFIG,
     output: {
-        dir: "build",
+        dir: ".",
         sourcemap: "inline",
         sourcemapExcludeSources: true,
         format: "cjs",
@@ -72,16 +71,12 @@ const LIBRARY_CONFIG = {
 
 let configs = [];
 if (process.env.BUILD === "lib") {
-    // Library build, only library code.
     configs.push(LIBRARY_CONFIG);
 } else if (process.env.BUILD === "production") {
-    // Production build, build library and main plugin.
     configs.push(LIBRARY_CONFIG, PROD_PLUGIN_CONFIG);
 } else if (process.env.BUILD === "dev") {
-    // Dev build, only build the plugin.
     configs.push(DEV_PLUGIN_CONFIG);
 } else {
-    // Default to the dev build.
     configs.push(DEV_PLUGIN_CONFIG);
 }
 
