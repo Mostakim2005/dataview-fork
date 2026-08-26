@@ -27,27 +27,15 @@ jobs:
         run: npm ci
 
       - name: Build production plugin
-        run: npm run build:prod
+        run: npm run build
 
-      - name: Prepare Obsidian plugin files
+      - name: Validate plugin files
         shell: bash
         run: |
           set -euo pipefail
 
-          # The production Rollup config outputs main.js to the repository root.
           test -s main.js
           test -s manifest.json
-
-          if [ -s styles.css ]; then
-            echo "styles.css found."
-          else
-            echo "No styles.css in this plugin; continuing without it."
-          fi
-
-      - name: Validate manifest
-        shell: bash
-        run: |
-          set -euo pipefail
 
           node - <<'NODE'
           const fs = require("node:fs");
@@ -79,35 +67,5 @@ jobs:
             gh release upload "$tag" "${assets[@]}" --clobber
           else
             echo "Creating release $tag."
-            gh release create "$tag" \
-              "${assets[@]}" \
-              --verify-tag \
-              --title "Dataview ${tag#v}" \
-              --generate-notes
+            gh release create "$tag"               "${assets[@]}"               --verify-tag               --title "Dataview ${tag#v}"               --generate-notes
           fi
-
-  docs:
-    name: Deploy Documentation
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Install documentation dependencies
-        run: pip install mkdocs-material mkdocs-redirects
-
-      - name: Deploy documentation
-        working-directory: docs
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
-          mkdocs gh-deploy --force
