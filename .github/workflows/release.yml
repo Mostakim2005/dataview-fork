@@ -26,29 +26,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build plugin
-        run: npm run build
+      - name: Build production plugin
+        run: npm run build:prod
 
       - name: Prepare Obsidian plugin files
         shell: bash
         run: |
           set -euo pipefail
 
-          test -s build/main.js
+          # The production Rollup config outputs main.js to the repository root.
+          test -s main.js
           test -s manifest.json
 
-          cp build/main.js main.js
+          if [ -s styles.css ]; then
+            echo "styles.css found."
+          else
+            echo "No styles.css in this plugin; continuing without it."
+          fi
 
-          # Dataview already keeps styles.css at the repository root.
-          test -s styles.css
-
-      - name: Validate plugin files
+      - name: Validate manifest
         shell: bash
         run: |
           set -euo pipefail
-          test -s main.js
-          test -s manifest.json
-          test -s styles.css
 
           node - <<'NODE'
           const fs = require("node:fs");
@@ -61,7 +60,7 @@ jobs:
           console.log(`Version: ${manifest.version}`);
           NODE
 
-      - name: Create release
+      - name: Upload assets to existing or new release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -69,11 +68,46 @@ jobs:
           set -euo pipefail
 
           tag="${GITHUB_REF_NAME}"
+          assets=(main.js manifest.json)
 
-          gh release create "$tag" \
-            main.js \
-            manifest.json \
-            styles.css \
-            --verify-tag \
-            --title "Dataview ${tag#v}" \
-            --generate-notes
+          if [ -s styles.css ]; then
+            assets+=(styles.css)
+          fi
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; replacing plugin assets."
+            gh release upload "$tag" "${assets[@]}" --clobber
+          else
+            echo "Creating release $tag."
+            gh release create "$tag" \
+              "${assets[@]}" \
+              --verify-tag \
+              --title "Dataview ${tag#v}" \
+              --generate-notes
+          fi
+
+  docs:
+    name: Deploy Documentation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install documentation dependencies
+        run: pip install mkdocs-material mkdocs-redirects
+
+      - name: Deploy documentation
+        working-directory: docs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          mkdocs gh-deploy --force
