@@ -1,18 +1,37 @@
-name: docs
+name: Deploy documentation
+
 on:
   release:
     types:
       - published
   workflow_dispatch:
+
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
         with:
-          python-version: 3.x
-      - run: |
-          pip install mkdocs-material mkdocs-redirects
-          cd docs
+          python-version: "3.12"
+
+      - name: Install documentation dependencies
+        run: pip install mkdocs-material mkdocs-redirects
+
+      - name: Deploy documentation
+        working-directory: docs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+
           mkdocs gh-deploy --force
